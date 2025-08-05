@@ -1,32 +1,68 @@
-# (C) 2025, Alexey Mazurenko, aka kp580a
-# The code is distributed under the BSD-2 license!
-# Version 0.1-1
-
 #!/bin/bash
 
+# (C) 2025, Alexey Mazurenko, aka kp580a
+# The code is distributed under the BSD-2 license!
+# Version 0.2-1
+
+VERSION="0.2-1"
+
+# Определение цветов
+SECOND_COLOR=$(tput setaf 3)
+FIRST_COLOR=$(tput setaf 14)
+RESET=$(tput sgr0)
+
+# Общая информация
+WHOAMI=$(whoami)
 KERNEL_NAME=$(uname -s)
 KERNEL_VERSION=$(uname -r)
-KERNEL_TYPE=$(uname -o)
+KERNEL_TYPE=$(uname -o 2>/dev/null || echo "Unknown")  # uname -o нет в FreeBSD
 ARCH=$(uname -m)
 
-CPU_NAME=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ":" -f 2 | sed 's/^[ \t]*//')
-GPU_NAME=$(lspci | grep -i "VGA\|3D\|Display" | cut -d ":" -f 3 | sed 's/^[ \t]*//')
+# Определение CPU
+if [ "$KERNEL_NAME" = "Linux" ]; then
+    CPU_NAME=$(grep "model name" /proc/cpuinfo | head -n 1 | cut -d ":" -f 2 | sed 's/^[ \t]*//')
+elif [ "$KERNEL_NAME" = "FreeBSD" ]; then
+    CPU_NAME=$(sysctl -n hw.model)
+fi
 
-USED_MEM=$(free -h --giga | grep "Mem:" | awk '{print $3}')
-TOTAL_MEM=$(free -h --giga | grep "Mem:" | awk '{print $2}')
+# Определение GPU
+if [ "$KERNEL_NAME" = "Linux" ]; then
+    GPU_NAME=$(lspci | grep -i "VGA\|3D\|Display" | cut -d ":" -f 3 | sed 's/^[ \t]*//')
+else
+    GPU_NAME="Not detected (use 'pciconf -lv' in FreeBSD)"
+fi
 
+# Определение памяти
+if [ "$KERNEL_NAME" = "Linux" ]; then
+    USED_MEM=$(free -h --giga | grep "Mem:" | awk '{print $3}')
+    TOTAL_MEM=$(free -h --giga | grep "Mem:" | awk '{print $2}')
+elif [ "$KERNEL_NAME" = "FreeBSD" ]; then
+    TOTAL_MEM=$(sysctl -n hw.physmem | awk '{print $0/1024/1024/1024"G"}')
+    USED_MEM=$(top -d1 | grep "Mem" | awk '{print $3"G"}')  # Примерно, лучше использовать vmstat
+fi
+
+if [ "$1" == "-v" ]; then
+    echo "Version $VERSION."
+    exit 0
+fi
+
+if [ "$1" == "-h" ]; then
+    echo "Help coming soon..."
+    exit 0
+fi
 
 echo ""
-echo "\033[36m┌─────────────────────┐  \033[33mSystem information"
-echo "\033[36m│                     │  "
-echo "\033[36m│     ____   ____     │  \033[96mKernel type : \033[93m$KERNEL_TYPE"
-echo "\033[36m│    |  _ \ / ___|    │  \033[96mKernel : \033[93m$KERNEL_NAME $KERNEL_VERSION"
-echo "\033[36m│    | |_) | |        │  \033[96mArchitecture : \033[93m$ARCH"
-echo "\033[36m│    |  __/| |___     │  "
-echo "\033[36m│    |_|    \____|    │  \033[33mHardware information"
-echo "\033[36m│                     │  "
-echo "\033[36m│                     │  \033[96mCPU : \033[93m$CPU_NAME"
-echo "\033[36m└─────────────────────┘  \033[96mGPU : \033[93m$GPU_NAME"
-echo "\033[36m          │ │"
-echo "\033[36m         ─────           \033[96mMem [used / total] : \033[93m$USED_MEM / $TOTAL_MEM "
+echo "${SECOND_COLOR}System information${RESET}"
+echo ""
+echo "${FIRST_COLOR}Kernel type : ${SECOND_COLOR}$KERNEL_TYPE${RESET}"
+echo "${FIRST_COLOR}Kernel : ${SECOND_COLOR}$KERNEL_NAME $KERNEL_VERSION${RESET}"
+echo "${FIRST_COLOR}Architecture : ${SECOND_COLOR}$ARCH${RESET}"
+echo "${FIRST_COLOR}User name : ${SECOND_COLOR}$WHOAMI${RESET}"
+echo ""
+echo "${SECOND_COLOR}Hardware information${RESET}"
+echo ""
+echo "${FIRST_COLOR}CPU : ${SECOND_COLOR}$CPU_NAME${RESET}"
+echo "${FIRST_COLOR}GPU : ${SECOND_COLOR}$GPU_NAME${RESET}"
+echo ""
+echo "${FIRST_COLOR}Mem [used / total] : ${SECOND_COLOR}$USED_MEM / $TOTAL_MEM ${RESET}"
 echo ""

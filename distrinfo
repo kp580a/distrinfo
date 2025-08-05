@@ -1,3 +1,7 @@
+# (C) 2025, Alexey Mazurenko, aka kp580a
+# The code is distributed under the BSD-2 license!
+# Version 0.1-1
+
 #!/bin/bash
 
 KERNEL_NAME=$(uname -s)

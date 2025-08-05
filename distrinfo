@@ -1,0 +1,28 @@
+#!/bin/bash
+
+KERNEL_NAME=$(uname -s)
+KERNEL_VERSION=$(uname -r)
+KERNEL_TYPE=$(uname -o)
+ARCH=$(uname -m)
+
+CPU_NAME=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ":" -f 2 | sed 's/^[ \t]*//')
+GPU_NAME=$(lspci | grep -i "VGA\|3D\|Display" | cut -d ":" -f 3 | sed 's/^[ \t]*//')
+
+USED_MEM=$(free -h --giga | grep "Mem:" | awk '{print $3}')
+TOTAL_MEM=$(free -h --giga | grep "Mem:" | awk '{print $2}')
+
+
+echo ""
+echo "\033[36m┌─────────────────────┐  \033[33mSystem information"
+echo "\033[36m│                     │  "
+echo "\033[36m│     ____   ____     │  \033[96mKernel type : \033[93m$KERNEL_TYPE"
+echo "\033[36m│    |  _ \ / ___|    │  \033[96mKernel : \033[93m$KERNEL_NAME $KERNEL_VERSION"
+echo "\033[36m│    | |_) | |        │  \033[96mArchitecture : \033[93m$ARCH"
+echo "\033[36m│    |  __/| |___     │  "
+echo "\033[36m│    |_|    \____|    │  \033[33mHardware information"
+echo "\033[36m│                     │  "
+echo "\033[36m│                     │  \033[96mCPU : \033[93m$CPU_NAME"
+echo "\033[36m└─────────────────────┘  \033[96mGPU : \033[93m$GPU_NAME"
+echo "\033[36m          │ │"
+echo "\033[36m         ─────           \033[96mMem [used / total] : \033[93m$USED_MEM / $TOTAL_MEM "
+echo ""
